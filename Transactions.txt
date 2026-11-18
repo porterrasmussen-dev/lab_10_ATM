@@ -1,0 +1,10 @@
+No other transactions
+Dave deposited 12.
+Dave deposited 16.
+Dave deposited 27.
+Dave widthdrew $2.01
+Dave deposited $24.92.
+Dave widthdrew $18.46.
+Gerald widthdrew $100.
+Gerald deposited $272.72.
+Oswald widthdrew $12.65.

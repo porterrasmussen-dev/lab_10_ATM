@@ -12,3 +12,4 @@
 /Users/porter.rasmussen/mycoderepositories/lab_10_ATM/obj/Debug/net10.0/lab_10_ATM.pdb
 /Users/porter.rasmussen/mycoderepositories/lab_10_ATM/obj/Debug/net10.0/lab_10_ATM.genruntimeconfig.cache
 /Users/porter.rasmussen/mycoderepositories/lab_10_ATM/obj/Debug/net10.0/ref/lab_10_ATM.dll
+/Users/porter.rasmussen/mycoderepositories/lab_10_ATM/obj/Debug/net10.0/lab_10_ATM.sourcelink.json
