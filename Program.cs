@@ -48,18 +48,23 @@ for (int i = 0; i < userNames.Count; i++)
         currentUserPosition = i;
     }
 }
-Debug.Assert(currentUserPosition > -1 && currentUserPosition < 5);
+Debug.Assert(currentUserPosition >=0 && currentUserPosition < userNames.Count);
 
 //PIN
 tries = 0;
 string inputPIN = "";
 for (int i = 0; i<3; i++)
 {
+    
     Console.Clear();
     if (inputPIN != PINs[currentUserPosition] && tries < 3)
     {
         tries ++;
-        if (tries > 1)Console.Write($"That was an invalid PIN! You can try {3-tries} more time(s). Please try again.\nPlease enter your PIN. ");
+        if (tries > 1)
+        {
+            Console.Write($"That was an invalid PIN! You can try {4-tries} more time(s). Please try again.\nPlease enter your PIN. ");
+            inputPIN = "";
+        }
         else Console.WriteLine($"{userName}, please enter your PIN.");
         for (int x = 0; x<5; x++)
         {
@@ -93,7 +98,7 @@ while(sessionGoing)
     string actionInput = Console.ReadLine()!;
     int action = CheckAction(actionInput);
 
-Debug.Assert(action > 0 && action < 8);
+    Debug.Assert(action > 0 && action < 8);
 
     switch (action)
     {
@@ -105,7 +110,7 @@ Debug.Assert(action > 0 && action < 8);
         case 2:
             previousBalance = currentBalance;
             currentBalance = Widthdraw(money[currentUserPosition]);
-            Debug.Assert(currentBalance < previousBalance);
+            Debug.Assert(currentBalance <= previousBalance);
             Console.Clear();
             money[currentUserPosition] = currentBalance;
             bankInfo[currentUserPosition][2] = $"{currentBalance}";
@@ -130,7 +135,7 @@ Debug.Assert(action > 0 && action < 8);
         case 3:
             previousBalance = currentBalance;
             currentBalance = Deposit(money[currentUserPosition]);
-            Debug.Assert(currentBalance > previousBalance);
+            Debug.Assert(currentBalance >= previousBalance);
             Console.Clear();
             money[currentUserPosition] = currentBalance;
             bankInfo[currentUserPosition][2] = $"{currentBalance}";
@@ -154,21 +159,31 @@ Debug.Assert(action > 0 && action < 8);
         case 4:
             Console.Clear();
             Console.WriteLine("These are the last five transactions:");
-            if (transactions.Count < 4)
+            List<string> currentUserTransactions = new List<string>();
+
+            foreach (string transaction in transactions)
             {
-                for (int i = transactions.Count-1; i >= 0; i--)
+                if (transaction.StartsWith(userName + " "))
                 {
-                    Console.WriteLine(transactions[i]);
+                    currentUserTransactions.Add(transaction);
                 }
+            }
+            if (currentUserTransactions.Count < 5)
+            {
+                for (int i = currentUserTransactions.Count-1; i >= 0; i--)
+                {
+                    Console.WriteLine(currentUserTransactions[i]);
+                }
+                Console.WriteLine($"There is no more transaction history for {userName}.");
             }
             else
             {
-                for (int i = transactions.Count - 1; i >= transactions.Count - 5; i--)
+                for (int i = currentUserTransactions.Count - 1; i >= currentUserTransactions.Count - 5; i--)
                 {
-                    Console.WriteLine(transactions[i]);
+                    Console.WriteLine(currentUserTransactions[i]);
                 }
             }
-            Console.WriteLine($"If you you would like to know your PERSONAL total balance, use the check balance option to see it.");
+            Console.WriteLine($"If you you would like to know your total balance, use the check balance option to see it.");
             Console.Write("Press any key to continue. ");
             Console.ReadKey(true);
             break;
@@ -176,8 +191,7 @@ Debug.Assert(action > 0 && action < 8);
         case 5:
             previousBalance = currentBalance;
             currentBalance = QuickDraw40(money[currentUserPosition]);
-            Debug.Assert(currentBalance < previousBalance);
-            Console.Clear();
+            Debug.Assert(currentBalance <= previousBalance);
             money[currentUserPosition] = currentBalance;
             bankInfo[currentUserPosition][2] = $"{currentBalance}";
             lines = new List<string>();
@@ -201,8 +215,7 @@ Debug.Assert(action > 0 && action < 8);
         case 6:
             previousBalance = currentBalance;
             currentBalance = QuickDraw100(money[currentUserPosition]);
-            Debug.Assert(currentBalance < previousBalance);
-            Console.Clear();
+            Debug.Assert(currentBalance <= previousBalance);
             money[currentUserPosition] = currentBalance;
             bankInfo[currentUserPosition][2] = $"{currentBalance}";
             lines = new List<string>();
@@ -227,6 +240,12 @@ Debug.Assert(action > 0 && action < 8);
             Console.Clear();
             Console.WriteLine($"Goodbye {userName}! Come again!");
             sessionGoing = false;
+            lines = new List<string>();
+            foreach (List<string> row in bankInfo)
+            {
+                lines.Add(string.Join(",", row));
+            }
+            File.WriteAllLines("Bank.txt", lines);
             break;
 
         default:
@@ -237,7 +256,7 @@ Debug.Assert(action > 0 && action < 8);
 
 static string RememberTransaction(string transactionType, double transactionValue)
 {
-    return $"{transactionType} ${transactionValue.ToString("###.##")}.";
+    return $"{transactionType} ${transactionValue.ToString("##0.00")}.";
 }
 
 static double Deposit(double currentBalance)
@@ -249,16 +268,20 @@ static double Deposit(double currentBalance)
         Console.Clear();
         Console.Write("How much money would you like to deposit? Use numbers only. ");
         string input = Console.ReadLine()!;
-        input = input.Replace("-", "");
         input = input.Replace("+", "");
-        if (double.TryParse(input, out double depositAmount))
+        if (input.Contains("-"))
         {
-            if (depositAmount < currentBalance) newBalance = currentBalance + depositAmount;
+            Console.Write("That was an invalid deposit! Please try again!\nPress any key to continue. ");
+            Console.ReadKey(true);
+        }
+        else if (double.TryParse(input, out double depositAmount))
+        {
+            if (depositAmount > 0) newBalance = currentBalance + depositAmount;
             if (newBalance != currentBalance) validDeposit = true;
         }
         else
         {
-            Console.Write("That was an invalid widthdrawal! Please try again!\nPress any key to continue. ");
+            Console.Write("That was an invalid deposit! Please try again!\nPress any key to continue. ");
             Console.ReadKey(true);
         }
     }
@@ -274,11 +297,15 @@ static double Widthdraw(double currentBalance)
         Console.Clear();
         Console.Write("How much money would you like to widthdraw? Use numbers only. ");
         string input = Console.ReadLine()!;
-        input = input.Replace("-", "");
         input = input.Replace("+", "");
-        if (double.TryParse(input, out double widthdrawalAmount))
+        if (input.Contains("-"))
         {
-            if (widthdrawalAmount < currentBalance) newBalance = currentBalance - widthdrawalAmount;
+            Console.Write("That was an invalid widthdrawal! Please try again!\nPress any key to continue. ");
+            Console.ReadKey(true);
+        }
+        else if (double.TryParse(input, out double widthdrawalAmount))
+        {
+            if (widthdrawalAmount > 0 && widthdrawalAmount <= currentBalance) newBalance = currentBalance - widthdrawalAmount;
             if (newBalance != currentBalance) validWidthdrawal = true;
         }
         else
@@ -292,18 +319,40 @@ static double Widthdraw(double currentBalance)
 
 static double QuickDraw40(double currentBalance)
 {
-
     double newBalance = currentBalance;
-    newBalance = currentBalance - 40;
-    return newBalance;
+    if (40 <= currentBalance)
+    {
+        Console.Clear();
+        newBalance = currentBalance - 40;
+        return newBalance;
+    }
+    else
+    {
+        Console.Clear();
+        Console.WriteLine("You don't have enough money to widthdraw $40.");
+        Console.ReadKey(true);
+        return currentBalance;
+    }
+
 }
 
 static double QuickDraw100(double currentBalance)
 {
 
     double newBalance = currentBalance;
-    newBalance = currentBalance - 100;
-    return newBalance;
+    if (100 <= currentBalance)
+    {
+        Console.Clear();
+        newBalance = currentBalance - 100;
+        return newBalance;
+    }
+    else
+    {
+        Console.Clear();
+        Console.WriteLine("You don't have enough money to widthdraw $100.");
+        Console.ReadKey(true);
+        return currentBalance;
+    }
 }
 
 static double CheckBalance(List<double> balances, int neededBalance)
